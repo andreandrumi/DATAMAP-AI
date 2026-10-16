@@ -84,6 +84,7 @@ export default function App() {
     academy: 'All',
     theme: 'All',
     status: 'All',
+    gender: 'All',
     year: 'All',
     searchQuery: ''
   });
@@ -155,6 +156,7 @@ export default function App() {
       academy: 'All',
       theme: 'All',
       status: 'All',
+      gender: 'All',
       year: 'All',
       searchQuery: ''
     });
@@ -171,6 +173,7 @@ export default function App() {
       academy: 'All',
       theme: 'All',
       status: 'All',
+      gender: 'All',
       year: 'All',
       searchQuery: ''
     });
@@ -202,6 +205,7 @@ export default function App() {
       if (filter.academy !== 'All' && p.academyName !== filter.academy) return false;
       if (filter.theme !== 'All' && p.themeName !== filter.theme) return false;
       if (filter.status !== 'All' && p.status !== filter.status) return false;
+      if (filter.gender && filter.gender !== 'All' && p.gender !== filter.gender) return false;
       if (filter.year !== 'All' && String(p.batchYear) !== filter.year) return false;
 
       if (filter.searchQuery.trim()) {

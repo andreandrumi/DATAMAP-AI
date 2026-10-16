@@ -14,7 +14,8 @@ import {
   PieChart, 
   X,
   Target,
-  ArrowUpRight
+  ArrowUpRight,
+  Users
 } from 'lucide-react';
 
 interface RegionDetailPanelProps {
@@ -118,6 +119,24 @@ export const RegionDetailPanel: React.FC<RegionDetailPanelProps> = ({
             <div className="text-[10px] text-teal-400/80 mt-1 font-semibold">
               {region.rasioSertifikasi}% Rasio
             </div>
+          </div>
+        </div>
+
+        {/* Gender Demographics Strip */}
+        <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-indigo-400" />
+            <span className="text-slate-300 font-semibold">Demografi Gender Peserta:</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-blue-300 flex items-center gap-1.5 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+              Laki-laki: {region.genderRatio.lakiLaki.toLocaleString()} ({region.pendaftar > 0 ? ((region.genderRatio.lakiLaki / region.pendaftar) * 100).toFixed(1) : 0}%)
+            </span>
+            <span className="text-rose-300 flex items-center gap-1.5 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+              Perempuan: {region.genderRatio.perempuan.toLocaleString()} ({region.pendaftar > 0 ? ((region.genderRatio.perempuan / region.pendaftar) * 100).toFixed(1) : 0}%)
+            </span>
           </div>
         </div>
 

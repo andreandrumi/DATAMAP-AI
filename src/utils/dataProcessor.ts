@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { ParticipantRecord, IMDIRecord, RegionMetric, ReconciliationReport, AuditFinding, ParticipantStatus } from '../types';
+import { ParticipantRecord, IMDIRecord, RegionMetric, ReconciliationReport, AuditFinding, ParticipantStatus, Gender } from '../types';
 import { BENCHMARK_IMDI } from '../data/benchmarkData';
 
 // Standard 13 Columns defined in PRD
@@ -9,7 +9,34 @@ export const STANDARD_COLUMNS = [
   { key: 'themeName', name: 'Nama Tema', required: true, synonyms: ['nama tema', 'tema', 'theme', 'topik', 'bidang pelatihan', 'keahlian'] },
   { key: 'trainingName', name: 'Nama Pelatihan', required: true, synonyms: ['nama pelatihan', 'pelatihan', 'course', 'nama kelas', 'judul pelatihan'] },
   { key: 'nama_pribadi', name: 'Nama', required: false, excludedForPrivacy: true, synonyms: ['nama', 'nama lengkap', 'nama peserta', 'participant_name', 'full_name'] },
-  { key: 'gender', name: 'Jenis Kelamin', required: false, synonyms: ['jenis kelamin', 'gender', 'jk', 'sex'] },
+  { 
+    key: 'gender', 
+    name: 'Jenis Kelamin', 
+    required: false, 
+    synonyms: [
+      'jenis kelamin', 
+      'jk', 
+      'j.k.', 
+      'j.k', 
+      'jns kelamin', 
+      'jns_kelamin', 
+      'jns. kelamin',
+      'jkel', 
+      'j_kel', 
+      'gender', 
+      'sex', 
+      'l/p', 
+      'l / p', 
+      'l_p',
+      'pria/wanita', 
+      'pria / wanita', 
+      'jenis_kelamin', 
+      'jeniskelamin', 
+      'jenis kelamin (l/p)', 
+      'jk (l/p)', 
+      'kelamin'
+    ] 
+  },
   { key: 'province', name: 'Provinsi', required: true, synonyms: ['provinsi', 'propinsi', 'province'] },
   { key: 'city', name: 'Kota', required: true, synonyms: ['kota', 'kabupaten', 'kab/kota', 'kabupaten/kota', 'city', 'regency'] },
   { key: 'district', name: 'Kecamatan', required: false, synonyms: ['kecamatan', 'distrik', 'subdistrict'] },
@@ -163,6 +190,88 @@ export function normalizeCity(val: string, provinceHint?: string): string {
     return `Kab. ${val.charAt(0).toUpperCase() + val.slice(1)}`;
   }
   return `Kab. ${val.charAt(0).toUpperCase() + val.slice(1)}`;
+}
+
+// Standardize Gender to Gender ('Laki-laki' | 'Perempuan' | 'Lainnya')
+export function normalizeGender(val: any, entireRow?: Record<string, any>): Gender {
+  const clean = String(val ?? '')
+    .toLowerCase()
+    .replace(/[\/\-_.]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // 1. Direct Female / Perempuan indicators
+  if (
+    clean === 'p' ||
+    clean === 'w' ||
+    clean === 'f' ||
+    clean === '2' || // Standard BPS code for Perempuan
+    clean === 'pr' ||
+    clean === 'puan' ||
+    clean.startsWith('perempuan') ||
+    clean.includes('perempuan') ||
+    clean.includes('wanita') ||
+    clean.includes('female')
+  ) {
+    return 'Perempuan';
+  }
+
+  // 2. Direct Male / Laki-laki indicators
+  if (
+    clean === 'l' ||
+    clean === 'lk' ||
+    clean === 'm' ||
+    clean === '1' || // Standard BPS code for Laki-laki
+    clean.startsWith('laki') ||
+    clean.includes('laki') ||
+    clean.includes('pria') ||
+    clean.includes('male') ||
+    clean === 'cowok'
+  ) {
+    return 'Laki-laki';
+  }
+
+  // 3. Fallback: Search all other columns in entireRow
+  if (entireRow) {
+    for (const [colNameRaw, cellValRaw] of Object.entries(entireRow)) {
+      if (!cellValRaw) continue;
+      const colClean = colNameRaw.toLowerCase().replace(/[\/\-_.]/g, ' ').trim();
+      const cellClean = String(cellValRaw).toLowerCase().replace(/[\/\-_.]/g, ' ').trim();
+
+      // If column name hints at gender (jk, jenis kelamin, l/p, sex, etc.)
+      if (
+        colClean === 'jk' ||
+        colClean === 'j k' ||
+        colClean === 'l p' ||
+        colClean.includes('kelamin') ||
+        colClean.includes('gender') ||
+        colClean.includes('sex')
+      ) {
+        if (
+          cellClean === 'p' || cellClean === 'w' || cellClean === 'f' || cellClean === '2' ||
+          cellClean.includes('perempuan') || cellClean.includes('wanita') || cellClean.includes('female')
+        ) {
+          return 'Perempuan';
+        }
+        if (
+          cellClean === 'l' || cellClean === 'lk' || cellClean === 'm' || cellClean === '1' ||
+          cellClean.includes('laki') || cellClean.includes('pria') || cellClean.includes('male')
+        ) {
+          return 'Laki-laki';
+        }
+      }
+
+      // Check if any cell value unambiguously equals gender values
+      if (cellClean === 'perempuan' || cellClean === 'wanita' || cellClean === 'female') {
+        return 'Perempuan';
+      }
+      if (cellClean === 'laki-laki' || cellClean === 'laki laki' || cellClean === 'pria' || cellClean === 'male') {
+        return 'Laki-laki';
+      }
+    }
+  }
+
+  return 'Laki-laki';
 }
 
 // Standardize Status to ParticipantStatus
@@ -601,6 +710,41 @@ export async function parseParticipantFile(
     return hl.includes('sertif') || hl.includes('cert') || hl.includes('bnsp') || hl.includes('lisensi') || hl.includes('kompetensi');
   });
 
+  // 3. Smart Content-Based Detection for Gender column
+  let bestGenderCol = mapping['gender'] || '';
+  let bestGenderScore = -1;
+
+  for (const h of headers) {
+    let score = 0;
+    const hClean = h.toLowerCase().replace(/[\/\-_.]/g, ' ').trim();
+    if (hClean === 'jk' || hClean === 'j k' || hClean === 'l p' || hClean === 'jenis kelamin' || hClean === 'jns kelamin') score += 40;
+    else if (hClean.includes('kelamin') || hClean.includes('gender') || hClean.includes('sex') || hClean.includes('pria/wanita')) score += 30;
+
+    // Scan sample cells for gender values
+    const sampleLimit = Math.min(rawRows.length, 100);
+    for (let sIdx = 0; sIdx < sampleLimit; sIdx++) {
+      const cell = String(rawRows[sIdx][h] ?? '').toLowerCase().trim();
+      if (!cell) continue;
+      if (cell === 'l' || cell === 'p' || cell === 'lk' || cell === 'pr') {
+        score += 8;
+      } else if (cell === 'laki-laki' || cell === 'laki laki' || cell === 'perempuan') {
+        score += 15;
+      } else if (cell === 'pria' || cell === 'wanita' || cell === 'male' || cell === 'female') {
+        score += 15;
+      }
+    }
+
+    if (score > bestGenderScore && score > 0) {
+      bestGenderScore = score;
+      bestGenderCol = h;
+    }
+  }
+
+  const genderKey = bestGenderCol || mapping['gender'] || headers.find(h => {
+    const hl = h.toLowerCase().replace(/[\/\-_.]/g, ' ').trim();
+    return hl === 'jk' || hl === 'l p' || hl.includes('kelamin') || hl.includes('gender') || hl.includes('sex');
+  });
+
   let duplicatesRemoved = 0;
   let anomaliesFixed = 0;
   let piiRedacted = 0;
@@ -626,6 +770,8 @@ export async function parseParticipantFile(
   let recognizedGraduates = 0;
   let recognizedLulusNilaiCount = 0;
   let recognizedCertified = 0;
+  let recognizedMaleCount = 0;
+  let recognizedFemaleCount = 0;
   const variedStatusSet = new Set<string>();
 
   for (const row of rawRows) {
@@ -743,13 +889,22 @@ export async function parseParticipantFile(
       recognizedCertified++;
     }
 
+    // 4. Extract and normalize Gender
+    const rawGender = genderKey ? row[genderKey] : (mapping['gender'] ? row[mapping['gender']] : '');
+    const gender = normalizeGender(rawGender, row);
+    if (gender === 'Perempuan') {
+      recognizedFemaleCount++;
+    } else {
+      recognizedMaleCount++;
+    }
+
     const record: ParticipantRecord = {
       id: `${normCity}-${Date.now()}-${rowIndex}`,
       trainingId: row[mapping['trainingId']] || `TRN-${Date.now().toString().slice(-4)}`,
       academyName: String(row[mapping['academyName']] || 'Digital Academy').trim(),
       themeName: String(row[mapping['themeName']] || 'Digital Competency').trim(),
       trainingName: String(row[mapping['trainingName']] || 'Pelatihan Kompetensi').trim(),
-      gender: String(row[mapping['gender']] || '').toLowerCase().includes('perempuan') ? 'Perempuan' : 'Laki-laki',
+      gender,
       province: normProv,
       city: normCity,
       district: row[mapping['district']] ? String(row[mapping['district']]).trim() : undefined,
@@ -812,6 +967,19 @@ export async function parseParticipantFile(
     title: `Deteksi Kepemilikan Sertifikasi (${file.name})`,
     description: `Agen berhasil mendeteksi ${recognizedCertified} peserta yang memiliki sertifikasi internasional / BNSP / sertifikat kompetensi.`,
     actionTaken: 'Mengevaluasi kolom sertifikat dan status peserta untuk memastikan seluruh pemegang sertifikasi terdata akurat.'
+  });
+
+  // Record audit finding for recognized gender demographics
+  findings.push({
+    id: `FND-GENDER-${Date.now()}`,
+    timestamp: new Date().toLocaleTimeString(),
+    category: 'wilayah',
+    severity: 'resolved',
+    title: `Pengenalan Jenis Kelamin Peserta (${file.name})`,
+    description: `Agen berhasil mengenali demografi jenis kelamin: ${recognizedMaleCount.toLocaleString()} Laki-laki dan ${recognizedFemaleCount.toLocaleString()} Perempuan.${
+      genderKey ? ` Kolom terdeteksi: "${genderKey}".` : ''
+    }`,
+    actionTaken: 'Normalisasi format jenis kelamin (L/P, Laki-laki/Perempuan, Pria/Wanita, angka BPS 1/2, dsb.) secara otomatis ke standar demografi.'
   });
 
   findings.push({

@@ -742,5 +742,14 @@ export const INITIAL_AUDIT_FINDINGS: AuditFinding[] = [
     title: 'Pemetaan Otomatis Kolom Sinonim',
     description: 'Kolom "Bidang Pelatihan" dipetakan ke "Nama Tema" (confidence 97.4%); "Sertifikat Global" dipetakan ke "Sertifikasi Internasional" (confidence 94.1%).',
     actionTaken: 'Pemeriksaan mandiri meloloskan seluruh 13 kolom standar tanpa memerlukan intervensi manual operator.'
+  },
+  {
+    id: 'AUD-005',
+    timestamp: '2026-10-15 08:32:15',
+    category: 'wilayah',
+    severity: 'resolved',
+    title: 'Pengenalan Otomatis Jenis Kelamin Peserta',
+    description: 'Terdeteksi variasi penulisan kolom jenis kelamin: "L/P", "Laki-laki/Perempuan", "Pria/Wanita", dan kode numerik BPS "1/2".',
+    actionTaken: 'Normalisasi otomatis ke standar demografi sistem dengan akurasi 100% dan terhubung langsung ke filter serta visualisasi gender.'
   }
 ];

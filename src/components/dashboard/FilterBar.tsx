@@ -38,6 +38,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       academy: 'All',
       theme: 'All',
       status: 'All',
+      gender: 'All',
       year: 'All',
       searchQuery: ''
     });
@@ -49,6 +50,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     filter.academy !== 'All' ||
     filter.theme !== 'All' ||
     filter.status !== 'All' ||
+    (filter.gender && filter.gender !== 'All') ||
     filter.year !== 'All' ||
     filter.searchQuery.trim() !== '';
 
@@ -97,7 +99,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       </div>
 
       {/* Dropdown Filters Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-1">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5 pt-1">
         {/* Provinsi */}
         <div>
           <label className="text-[10px] text-slate-400 font-medium block mb-1">Provinsi</label>
@@ -170,6 +172,20 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <option value="pembatalan">Pembatalan</option>
             <option value="tidak_lulus">Tidak Lulus</option>
             <option value="tidak_lulus_administrasi">Gagal Administrasi</option>
+          </select>
+        </div>
+
+        {/* Jenis Kelamin */}
+        <div>
+          <label className="text-[10px] text-slate-400 font-medium block mb-1">Jenis Kelamin</label>
+          <select
+            value={filter.gender || 'All'}
+            onChange={(e) => onChangeFilter({ ...filter, gender: e.target.value })}
+            className="w-full py-1.5 px-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+          >
+            <option value="All">Semua Gender</option>
+            <option value="Laki-laki">Laki-laki</option>
+            <option value="Perempuan">Perempuan</option>
           </select>
         </div>
 

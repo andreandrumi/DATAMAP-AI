@@ -110,6 +110,7 @@ export interface FilterState {
   academy: string; // 'All' | specific academy
   theme: string; // 'All' | specific theme
   status: string; // 'All' | specific status
+  gender?: string; // 'All' | 'Laki-laki' | 'Perempuan'
   year: string; // 'All' | '2024' | '2025' | '2026'
   searchQuery: string;
 }
