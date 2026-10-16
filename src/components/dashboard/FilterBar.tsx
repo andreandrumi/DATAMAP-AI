@@ -166,7 +166,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             className="w-full py-1.5 px-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-blue-500"
           >
             <option value="All">Semua Status</option>
-            <option value="lulus">Lulus (Alumni)</option>
+            <option value="lulus">Lulus (Termasuk Lulus Pelatihan - Nilai / Alumni)</option>
             <option value="pembatalan">Pembatalan</option>
             <option value="tidak_lulus">Tidak Lulus</option>
             <option value="tidak_lulus_administrasi">Gagal Administrasi</option>

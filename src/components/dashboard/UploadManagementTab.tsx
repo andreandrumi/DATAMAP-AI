@@ -88,8 +88,10 @@ export const UploadManagementTab: React.FC<UploadManagementTabProps> = ({
         files.length === 1 ? files[0].name : `${files.length} File Gabungan`
       );
 
+      const totalGrads = combinedRecords.filter(r => r.status === 'lulus').length;
+      const totalCerts = combinedRecords.filter(r => r.hasInternationalCert).length;
       setFeedbackMessage(
-        `Sukses memproses ${files.length} file dengan total ${totalReceived.toLocaleString()} baris data! PII Nama telah dibuang, duplikat disaring, dan wilayah distandarisasi.`
+        `Sukses memproses ${files.length} file (${totalReceived.toLocaleString()} baris data)! Agen berhasil mengenali ${totalGrads.toLocaleString()} peserta lulus (termasuk baris status resmi "Lulus Pelatihan - Nilai", "lulue pelatihan", "lulus nilai", "kompeten") dan ${totalCerts.toLocaleString()} peserta bersertifikasi.`
       );
     } catch (err: any) {
       console.error(err);
@@ -249,6 +251,10 @@ export const UploadManagementTab: React.FC<UploadManagementTabProps> = ({
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <strong>Kolom Wajib: </strong> Nama Tema, Nama Pelatihan, Provinsi, Kota, Nomor Registrasi, Status Peserta.
+              </li>
+              <li className="flex items-start gap-1.5 text-emerald-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1 shrink-0"></span>
+                <span><strong>Status Kelulusan: </strong> Agen otomatis mengenali <em>Lulus Pelatihan - Nilai</em>, <em>Lulus Nilai</em>, <em>Lulue Pelatihan</em>, <em>Kompeten</em>, <em>Lulus</em>, dan variasinya sebagai status <strong>Lulus</strong>.</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
