@@ -208,41 +208,47 @@ export const DataAuditTab: React.FC<DataAuditTabProps> = ({
           </span>
         </div>
 
-        <div className="space-y-3">
-          {auditReport.findings.map((item, idx) => (
-            <div 
-              key={idx}
-              className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-slate-800/80 pb-2 mb-2">
-                <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    item.category === 'privasi' ? 'bg-rose-500/20 text-rose-300' :
-                    item.category === 'duplikasi' ? 'bg-amber-500/20 text-amber-300' :
-                    item.category === 'wilayah' ? 'bg-cyan-500/20 text-cyan-300' :
-                    'bg-blue-500/20 text-blue-300'
-                  }`}>
-                    {item.category.toUpperCase()}
-                  </span>
-                  <h4 className="text-xs font-bold text-white">{item.title}</h4>
+        {auditReport.findings.length === 0 ? (
+          <div className="bg-slate-950/40 p-10 rounded-xl border border-slate-800 text-center text-xs text-slate-400 italic">
+            Belum ada log pemeriksaan mandiri. Riwayat tindakan otomatis agen (pembersihan duplikat, proteksi PII UU PDP, dan standarisasi wilayah) akan dicatat di sini begitu file pelatihan diunggah.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {auditReport.findings.map((item, idx) => (
+              <div 
+                key={idx}
+                className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-slate-800/80 pb-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      item.category === 'privasi' ? 'bg-rose-500/20 text-rose-300' :
+                      item.category === 'duplikasi' ? 'bg-amber-500/20 text-amber-300' :
+                      item.category === 'wilayah' ? 'bg-cyan-500/20 text-cyan-300' :
+                      'bg-blue-500/20 text-blue-300'
+                    }`}>
+                      {item.category.toUpperCase()}
+                    </span>
+                    <h4 className="text-xs font-bold text-white">{item.title}</h4>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono">{item.timestamp}</span>
                 </div>
-                <span className="text-[10px] text-slate-400 font-mono">{item.timestamp}</span>
-              </div>
 
-              <p className="text-xs text-slate-300 mb-2 leading-relaxed">
-                {item.description}
-              </p>
+                <p className="text-xs text-slate-300 mb-2 leading-relaxed">
+                  {item.description}
+                </p>
 
-              <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-[11px] text-emerald-300 flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-white">Tindakan Mandiri Agen: </strong>
-                  {item.actionTaken}
+                <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-[11px] text-emerald-300 flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-white">Tindakan Mandiri Agen: </strong>
+                    {item.actionTaken}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

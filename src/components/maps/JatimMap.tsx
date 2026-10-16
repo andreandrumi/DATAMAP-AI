@@ -100,7 +100,7 @@ export const JatimMap: React.FC<JatimMapProps> = ({
       if (v > 90) return '#10b981';
       if (v > 50) return '#34d399';
       if (v > 0) return '#a7f3d0';
-      return '#f1f5f9';
+      return '#1e293b';
     }
 
     if (activeMetric === 'lulusan') {
@@ -109,7 +109,7 @@ export const JatimMap: React.FC<JatimMapProps> = ({
       if (v > 70) return '#14b8a6';
       if (v > 40) return '#5eead4';
       if (v > 0) return '#ccfbf1';
-      return '#f1f5f9';
+      return '#1e293b';
     }
 
     if (activeMetric === 'tingkatKelulusan') {
@@ -118,7 +118,7 @@ export const JatimMap: React.FC<JatimMapProps> = ({
       if (v >= 80) return '#22c55e';
       if (v >= 70) return '#eab308'; // Amber
       if (v > 0) return '#f97316'; // Orange
-      return '#e2e8f0';
+      return '#1e293b';
     }
 
     if (activeMetric === 'imdi') {
@@ -127,10 +127,11 @@ export const JatimMap: React.FC<JatimMapProps> = ({
       if (v >= 50) return '#818cf8';
       if (v >= 43) return '#a5b4fc';
       if (v > 0) return '#c7d2fe';
-      return '#f1f5f9';
+      return '#1e293b';
     }
 
     if (activeMetric === 'priorityScore') {
+      if (data.pendaftar === 0) return '#1e293b';
       const v = data.priorityScore;
       if (v >= 65) return '#dc2626'; // Red high urgency
       if (v >= 50) return '#ea580c'; // Orange
@@ -138,7 +139,7 @@ export const JatimMap: React.FC<JatimMapProps> = ({
       return '#86efac'; // Green low urgency
     }
 
-    return '#cbd5e1';
+    return '#1e293b';
   };
 
   const hoveredData = hoveredCity ? regionMetrics[hoveredCity] : null;
@@ -277,7 +278,7 @@ export const JatimMap: React.FC<JatimMapProps> = ({
                   x={c.x + c.width / 2}
                   y={c.y + c.height / 2 - 4}
                   textAnchor="middle"
-                  fill={isHovered || isSelected ? '#ffffff' : '#0f172a'}
+                  fill={isHovered || isSelected ? '#ffffff' : fillColor === '#1e293b' ? '#cbd5e1' : '#0f172a'}
                   fontSize={c.width > 70 ? '9.5' : '8.5'}
                   fontWeight="700"
                   pointerEvents="none"
@@ -290,7 +291,7 @@ export const JatimMap: React.FC<JatimMapProps> = ({
                   x={c.x + c.width / 2}
                   y={c.y + c.height / 2 + 9}
                   textAnchor="middle"
-                  fill={isHovered || isSelected ? '#e2e8f0' : '#1e293b'}
+                  fill={isHovered || isSelected ? '#e2e8f0' : fillColor === '#1e293b' ? '#64748b' : '#1e293b'}
                   fontSize="8"
                   fontWeight="600"
                   pointerEvents="none"
@@ -299,7 +300,7 @@ export const JatimMap: React.FC<JatimMapProps> = ({
                   {activeMetric === 'lulusan' && `${data ? data.lulusan : 0} lls`}
                   {activeMetric === 'tingkatKelulusan' && `${data ? data.tingkatKelulusan : 0}%`}
                   {activeMetric === 'imdi' && `IMDI ${data?.imdi?.score || '-'}`}
-                  {activeMetric === 'priorityScore' && `Skor ${data?.priorityScore || '-'}`}
+                  {activeMetric === 'priorityScore' && (data && data.pendaftar > 0 ? `Skor ${data.priorityScore}` : '0 pst')}
                 </text>
               </g>
             );

@@ -312,22 +312,28 @@ export const RegionDetailPanel: React.FC<RegionDetailPanelProps> = ({
               <GraduationCap className="w-3.5 h-3.5 text-blue-400" />
               Capaian per Akademi
             </h5>
-            <div className="space-y-2">
-              {region.topAcademies.slice(0, 4).map((acad, aIdx) => (
-                <div key={aIdx} className="text-xs">
-                  <div className="flex justify-between text-slate-300 mb-0.5">
-                    <span className="truncate pr-2 font-medium">{acad.name}</span>
-                    <span className="font-mono text-slate-400 shrink-0">{acad.pendaftar} pst ({acad.lulusan} lls)</span>
+            {region.topAcademies.length === 0 ? (
+              <p className="text-xs text-slate-400 italic py-3 text-center">
+                Belum ada peserta pelatihan terdata untuk wilayah ini.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {region.topAcademies.slice(0, 4).map((acad, aIdx) => (
+                  <div key={aIdx} className="text-xs">
+                    <div className="flex justify-between text-slate-300 mb-0.5">
+                      <span className="truncate pr-2 font-medium">{acad.name}</span>
+                      <span className="font-mono text-slate-400 shrink-0">{acad.pendaftar} pst ({acad.lulusan} lls)</span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-blue-500 h-full rounded-full"
+                        style={{ width: `${Math.min(100, (acad.pendaftar / Math.max(1, region.pendaftar)) * 100)}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-blue-500 h-full rounded-full"
-                      style={{ width: `${Math.min(100, (acad.pendaftar / Math.max(1, region.pendaftar)) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Top Tema */}
@@ -336,22 +342,28 @@ export const RegionDetailPanel: React.FC<RegionDetailPanelProps> = ({
               <PieChart className="w-3.5 h-3.5 text-emerald-400" />
               Capaian per Tema
             </h5>
-            <div className="space-y-2">
-              {region.topThemes.slice(0, 4).map((th, tIdx) => (
-                <div key={tIdx} className="text-xs">
-                  <div className="flex justify-between text-slate-300 mb-0.5">
-                    <span className="truncate pr-2 font-medium">{th.name}</span>
-                    <span className="font-mono text-slate-400 shrink-0">{th.pendaftar} pst ({th.lulusan} lls)</span>
+            {region.topThemes.length === 0 ? (
+              <p className="text-xs text-slate-400 italic py-3 text-center">
+                Belum ada tema pelatihan terdata untuk wilayah ini.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {region.topThemes.slice(0, 4).map((th, tIdx) => (
+                  <div key={tIdx} className="text-xs">
+                    <div className="flex justify-between text-slate-300 mb-0.5">
+                      <span className="truncate pr-2 font-medium">{th.name}</span>
+                      <span className="font-mono text-slate-400 shrink-0">{th.pendaftar} pst ({th.lulusan} lls)</span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-emerald-500 h-full rounded-full"
+                        style={{ width: `${Math.min(100, (th.pendaftar / Math.max(1, region.pendaftar)) * 100)}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-emerald-500 h-full rounded-full"
-                      style={{ width: `${Math.min(100, (th.pendaftar / Math.max(1, region.pendaftar)) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -14,7 +14,8 @@ import {
   MapPin,
   ArrowUpRight,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  Upload
 } from 'lucide-react';
 
 interface KpiOverviewTabProps {
@@ -22,13 +23,15 @@ interface KpiOverviewTabProps {
   regionMetrics: Record<string, RegionMetric>;
   onSelectCity: (city: string) => void;
   onNavigateToTab: (tab: 'kpi' | 'jatim' | 'ntb' | 'audit' | 'upload') => void;
+  onLoadBenchmark?: () => void;
 }
 
 export const KpiOverviewTab: React.FC<KpiOverviewTabProps> = ({
   filteredParticipants,
   regionMetrics,
   onSelectCity,
-  onNavigateToTab
+  onNavigateToTab,
+  onLoadBenchmark
 }) => {
   // Aggregate KPIs
   const kpi = useMemo(() => {
@@ -190,6 +193,41 @@ export const KpiOverviewTab: React.FC<KpiOverviewTabProps> = ({
         </div>
       </div>
 
+      {/* Empty State Onboarding Hero Banner */}
+      {kpi.total === 0 && (
+        <div className="bg-gradient-to-r from-blue-950/40 via-slate-900 to-indigo-950/40 border border-blue-500/30 rounded-2xl p-6 sm:p-8 text-center shadow-xl">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mb-4">
+            <Upload className="w-7 h-7" />
+          </div>
+          <h3 className="text-lg font-bold text-white">
+            Dashboard Siap Memproses Data Pelatihan
+          </h3>
+          <p className="text-xs text-slate-300 max-w-lg mx-auto mt-1.5 leading-relaxed">
+            Saat ini belum ada data peserta pelatihan yang diunggah. Unggah berkas Excel (.xlsx / .csv) hasil pelatihan Anda, atau muat contoh data benchmark untuk menguji seluruh fitur visualisasi, peta interaktif, dan rekomendasi AI seketika.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
+            <button
+              onClick={() => onNavigateToTab('upload')}
+              className="text-xs px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-2 shadow-lg shadow-blue-600/30 transition cursor-pointer"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Unggah File Excel Sekarang</span>
+            </button>
+
+            {onLoadBenchmark && (
+              <button
+                onClick={onLoadBenchmark}
+                className="text-xs px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold flex items-center gap-2 transition cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>Muat Contoh Data Benchmark (1.850 Peserta)</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Primary KPI Cards (FR-01, FR-06) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {/* Total Registrants */}
@@ -298,43 +336,49 @@ export const KpiOverviewTab: React.FC<KpiOverviewTabProps> = ({
             </span>
           </div>
 
-          <div className="space-y-3.5">
-            {kpi.sortedAcademies.map((acad, idx) => {
-              const maxPendaftar = Math.max(...kpi.sortedAcademies.map(a => a.pendaftar), 1);
-              const percentage = Math.round((acad.pendaftar / maxPendaftar) * 100);
+          {kpi.sortedAcademies.length === 0 ? (
+            <div className="py-12 text-center text-slate-400 text-xs italic bg-slate-950/40 rounded-xl border border-slate-800/60">
+              Belum ada data akademi terdata. Silakan unggah file Excel data pelatihan Anda.
+            </div>
+          ) : (
+            <div className="space-y-3.5">
+              {kpi.sortedAcademies.map((acad, idx) => {
+                const maxPendaftar = Math.max(...kpi.sortedAcademies.map(a => a.pendaftar), 1);
+                const percentage = Math.round((acad.pendaftar / maxPendaftar) * 100);
 
-              return (
-                <div key={idx} className="bg-slate-950/50 p-3 rounded-xl border border-slate-800/80">
-                  <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="font-semibold text-slate-200 truncate pr-2">
-                      {acad.name}
-                    </span>
-                    <div className="flex items-center gap-3 shrink-0 font-mono">
-                      <span className="text-slate-400">{acad.pendaftar} pendaftar</span>
-                      <span className="text-emerald-400 font-bold">{acad.lulusan} lulus</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300">
-                        {acad.passRate}%
+                return (
+                  <div key={idx} className="bg-slate-950/50 p-3 rounded-xl border border-slate-800/80">
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="font-semibold text-slate-200 truncate pr-2">
+                        {acad.name}
                       </span>
+                      <div className="flex items-center gap-3 shrink-0 font-mono">
+                        <span className="text-slate-400">{acad.pendaftar} pendaftar</span>
+                        <span className="text-emerald-400 font-bold">{acad.lulusan} lulus</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300">
+                          {acad.passRate}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Dual bar: Pendaftar vs Lulus */}
+                    <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden flex">
+                      <div 
+                        className="bg-emerald-500 h-full rounded-l-full transition-all duration-500"
+                        style={{ width: `${(acad.lulusan / Math.max(1, acad.pendaftar)) * percentage}%` }}
+                        title={`Lulusan: ${acad.lulusan}`}
+                      />
+                      <div 
+                        className="bg-blue-400/40 h-full rounded-r-full transition-all duration-500"
+                        style={{ width: `${(1 - (acad.lulusan / Math.max(1, acad.pendaftar))) * percentage}%` }}
+                        title={`Peserta belum/tidak lulus: ${acad.pendaftar - acad.lulusan}`}
+                      />
                     </div>
                   </div>
-
-                  {/* Dual bar: Pendaftar vs Lulus */}
-                  <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden flex">
-                    <div 
-                      className="bg-emerald-500 h-full rounded-l-full transition-all duration-500"
-                      style={{ width: `${(acad.lulusan / Math.max(1, acad.pendaftar)) * percentage}%` }}
-                      title={`Lulusan: ${acad.lulusan}`}
-                    />
-                    <div 
-                      className="bg-blue-400/40 h-full rounded-r-full transition-all duration-500"
-                      style={{ width: `${(1 - (acad.lulusan / Math.max(1, acad.pendaftar))) * percentage}%` }}
-                      title={`Peserta belum/tidak lulus: ${acad.pendaftar - acad.lulusan}`}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Capaian per Tema Pelatihan */}
@@ -356,40 +400,46 @@ export const KpiOverviewTab: React.FC<KpiOverviewTabProps> = ({
             </span>
           </div>
 
-          <div className="space-y-3.5 max-h-[460px] overflow-y-auto pr-1">
-            {kpi.sortedThemes.map((th, idx) => {
-              const maxPendaftar = Math.max(...kpi.sortedThemes.map(t => t.pendaftar), 1);
-              const barWidth = Math.round((th.pendaftar / maxPendaftar) * 100);
+          {kpi.sortedThemes.length === 0 ? (
+            <div className="py-12 text-center text-slate-400 text-xs italic bg-slate-950/40 rounded-xl border border-slate-800/60">
+              Belum ada data tema kompetensi terdata. Silakan unggah file Excel data pelatihan Anda.
+            </div>
+          ) : (
+            <div className="space-y-3.5 max-h-[460px] overflow-y-auto pr-1">
+              {kpi.sortedThemes.map((th, idx) => {
+                const maxPendaftar = Math.max(...kpi.sortedThemes.map(t => t.pendaftar), 1);
+                const barWidth = Math.round((th.pendaftar / maxPendaftar) * 100);
 
-              return (
-                <div key={idx} className="bg-slate-950/50 p-3 rounded-xl border border-slate-800/80">
-                  <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="font-semibold text-slate-200 truncate pr-2">
-                      {th.name}
-                    </span>
-                    <div className="flex items-center gap-3 shrink-0 font-mono">
-                      <span className="text-slate-400">{th.pendaftar} pst</span>
-                      <span className="text-emerald-400 font-bold">{th.lulusan} lls</span>
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        th.passRate >= 85 ? 'bg-emerald-500/20 text-emerald-300' :
-                        th.passRate >= 75 ? 'bg-amber-500/20 text-amber-300' :
-                        'bg-rose-500/20 text-rose-300'
-                      }`}>
-                        {th.passRate}%
+                return (
+                  <div key={idx} className="bg-slate-950/50 p-3 rounded-xl border border-slate-800/80">
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="font-semibold text-slate-200 truncate pr-2">
+                        {th.name}
                       </span>
+                      <div className="flex items-center gap-3 shrink-0 font-mono">
+                        <span className="text-slate-400">{th.pendaftar} pst</span>
+                        <span className="text-emerald-400 font-bold">{th.lulusan} lls</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          th.passRate >= 85 ? 'bg-emerald-500/20 text-emerald-300' :
+                          th.passRate >= 75 ? 'bg-amber-500/20 text-amber-300' :
+                          'bg-rose-500/20 text-rose-300'
+                        }`}>
+                          {th.passRate}%
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${barWidth}%` }}
+                      />
                     </div>
                   </div>
-
-                  <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${barWidth}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -426,76 +476,82 @@ export const KpiOverviewTab: React.FC<KpiOverviewTabProps> = ({
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-slate-800 rounded-xl max-h-[380px] overflow-y-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 sticky top-0 z-10">
-                <tr>
-                  <th className="py-2.5 px-3">No</th>
-                  <th className="py-2.5 px-3">Kabupaten / Kota</th>
-                  <th className="py-2.5 px-3">Provinsi</th>
-                  <th className="py-2.5 px-3 text-right">Pendaftar</th>
-                  <th className="py-2.5 px-3 text-right">Lulusan</th>
-                  <th className="py-2.5 px-3 text-right">Kelulusan</th>
-                  <th className="py-2.5 px-3 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800 text-slate-300">
-                {kpi.sortedCities.map((city, idx) => {
-                  const regData = regionMetrics[city.name];
-                  const imdiScore = regData?.imdi?.score;
+          {kpi.sortedCities.length === 0 ? (
+            <div className="py-16 text-center text-slate-400 text-xs italic bg-slate-950/40 rounded-xl border border-slate-800/60">
+              Belum ada data sebaran kabupaten/kota terdata. Silakan unggah file Excel data pelatihan Anda.
+            </div>
+          ) : (
+            <div className="overflow-x-auto border border-slate-800 rounded-xl max-h-[380px] overflow-y-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 sticky top-0 z-10">
+                  <tr>
+                    <th className="py-2.5 px-3">No</th>
+                    <th className="py-2.5 px-3">Kabupaten / Kota</th>
+                    <th className="py-2.5 px-3">Provinsi</th>
+                    <th className="py-2.5 px-3 text-right">Pendaftar</th>
+                    <th className="py-2.5 px-3 text-right">Lulusan</th>
+                    <th className="py-2.5 px-3 text-right">Kelulusan</th>
+                    <th className="py-2.5 px-3 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800 text-slate-300">
+                  {kpi.sortedCities.map((city, idx) => {
+                    const regData = regionMetrics[city.name];
+                    const imdiScore = regData?.imdi?.score;
 
-                  return (
-                    <tr key={idx} className="hover:bg-slate-800/60 transition">
-                      <td className="py-2 px-3 font-mono text-slate-400">{idx + 1}</td>
-                      <td className="py-2 px-3 font-bold text-white flex items-center gap-2">
-                        <span>{city.name}</span>
-                        {imdiScore && (
-                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-normal">
-                            IMDI {imdiScore}
+                    return (
+                      <tr key={idx} className="hover:bg-slate-800/60 transition">
+                        <td className="py-2 px-3 font-mono text-slate-400">{idx + 1}</td>
+                        <td className="py-2 px-3 font-bold text-white flex items-center gap-2">
+                          <span>{city.name}</span>
+                          {imdiScore && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-normal">
+                              IMDI {imdiScore}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                            city.province === 'Jawa Timur' ? 'bg-blue-500/20 text-blue-300' : 'bg-cyan-500/20 text-cyan-300'
+                          }`}>
+                            {city.province}
                           </span>
-                        )}
-                      </td>
-                      <td className="py-2 px-3">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                          city.province === 'Jawa Timur' ? 'bg-blue-500/20 text-blue-300' : 'bg-cyan-500/20 text-cyan-300'
-                        }`}>
-                          {city.province}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 text-right font-mono font-bold text-slate-200">
-                        {city.pendaftar.toLocaleString()}
-                      </td>
-                      <td className="py-2 px-3 text-right font-mono font-bold text-emerald-400">
-                        {city.lulusan.toLocaleString()}
-                      </td>
-                      <td className="py-2 px-3 text-right">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          city.passRate >= 85 ? 'bg-emerald-500/20 text-emerald-300' :
-                          city.passRate >= 75 ? 'bg-amber-500/20 text-amber-300' :
-                          'bg-rose-500/20 text-rose-300'
-                        }`}>
-                          {city.passRate}%
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        <button
-                          onClick={() => {
-                            onSelectCity(city.name);
-                            if (city.province === 'Jawa Timur') onNavigateToTab('jatim');
-                            else onNavigateToTab('ntb');
-                          }}
-                          className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-200 font-medium transition inline-flex items-center gap-1"
-                        >
-                          Detail
-                          <ArrowUpRight className="w-3 h-3" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-200">
+                          {city.pendaftar.toLocaleString()}
+                        </td>
+                        <td className="py-2 px-3 text-right font-mono font-bold text-emerald-400">
+                          {city.lulusan.toLocaleString()}
+                        </td>
+                        <td className="py-2 px-3 text-right">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            city.passRate >= 85 ? 'bg-emerald-500/20 text-emerald-300' :
+                            city.passRate >= 75 ? 'bg-amber-500/20 text-amber-300' :
+                            'bg-rose-500/20 text-rose-300'
+                          }`}>
+                            {city.passRate}%
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          <button
+                            onClick={() => {
+                              onSelectCity(city.name);
+                              if (city.province === 'Jawa Timur') onNavigateToTab('jatim');
+                              else onNavigateToTab('ntb');
+                            }}
+                            className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-200 font-medium transition inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            Detail
+                            <ArrowUpRight className="w-3 h-3" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Top 10 Kecamatan & Gender Ratio */}
@@ -510,20 +566,26 @@ export const KpiOverviewTab: React.FC<KpiOverviewTabProps> = ({
               Konsentrasi partisipasi alumni per kecamatan
             </p>
 
-            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-              {kpi.topDistricts.map((dist, idx) => (
-                <div key={idx} className="flex items-center justify-between text-xs bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
-                  <div className="truncate pr-2">
-                    <span className="font-mono text-slate-400 mr-1.5">{idx + 1}.</span>
-                    <span className="font-medium text-slate-200">{dist.name}</span>
+            {kpi.topDistricts.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-xs italic bg-slate-950/40 rounded-xl border border-slate-800/60">
+                Belum ada data kecamatan terdata.
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                {kpi.topDistricts.map((dist, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-xs bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
+                    <div className="truncate pr-2">
+                      <span className="font-mono text-slate-400 mr-1.5">{idx + 1}.</span>
+                      <span className="font-medium text-slate-200">{dist.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 font-mono shrink-0">
+                      <span className="text-slate-300">{dist.pendaftar} pst</span>
+                      <span className="text-emerald-400 font-bold">{dist.lulusan} lls</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 font-mono shrink-0">
-                    <span className="text-slate-300">{dist.pendaftar} pst</span>
-                    <span className="text-emerald-400 font-bold">{dist.lulusan} lls</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Gender Ratio Card */}

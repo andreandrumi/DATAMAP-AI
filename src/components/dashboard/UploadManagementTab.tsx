@@ -9,7 +9,8 @@ import {
   FileText, 
   Layers, 
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  RotateCcw
 } from 'lucide-react';
 import { parseParticipantFile, downloadSampleExcelTemplate } from '../../utils/dataProcessor';
 import { ParticipantRecord, AuditFinding } from '../../types';
@@ -25,11 +26,17 @@ interface UploadManagementTabProps {
     fileName: string
   ) => void;
   onNavigateToTab: (tab: 'kpi' | 'jatim' | 'ntb' | 'audit' | 'upload') => void;
+  onLoadBenchmark?: () => void;
+  onClearData?: () => void;
+  currentTotalParticipants: number;
 }
 
 export const UploadManagementTab: React.FC<UploadManagementTabProps> = ({
   onIngestFiles,
-  onNavigateToTab
+  onNavigateToTab,
+  onLoadBenchmark,
+  onClearData,
+  currentTotalParticipants
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadedFilesList, setUploadedFilesList] = useState<{ name: string; size: string; status: string }[]>([]);
@@ -98,22 +105,54 @@ export const UploadManagementTab: React.FC<UploadManagementTabProps> = ({
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Upload className="w-5 h-5 text-blue-400" />
-              Unggah &amp; Integrasi Data Pelatihan (FR-01)
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Upload className="w-5 h-5 text-blue-400" />
+                Unggah &amp; Integrasi Data Pelatihan (FR-01)
+              </h3>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                currentTotalParticipants > 0 
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+              }`}>
+                {currentTotalParticipants > 0 ? `${currentTotalParticipants.toLocaleString()} Data Aktif` : '0 Data (Kosong)'}
+              </span>
+            </div>
             <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
               Unggah satu atau banyak file Excel (.xlsx, .xls) atau CSV sekaligus. Sistem AI Agent akan secara otomatis mencocokkan kolom semantik, membuang data pribadi demi kepatuhan UU PDP, menghapus duplikasi registrasi, dan menyajikan metrik terkini dalam hitungan detik.
             </p>
           </div>
 
-          <button
-            onClick={downloadSampleExcelTemplate}
-            className="text-xs px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-2 shadow-lg transition shrink-0"
-          >
-            <Download className="w-4 h-4" />
-            <span>Unduh Template 13 Kolom</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {onLoadBenchmark && currentTotalParticipants === 0 && (
+              <button
+                onClick={onLoadBenchmark}
+                className="text-xs px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Muat Data Benchmark</span>
+              </button>
+            )}
+
+            {onClearData && currentTotalParticipants > 0 && (
+              <button
+                onClick={onClearData}
+                className="text-xs px-3 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-800/80 font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                title="Hapus data dan kembali ke keadaan dashboard kosong"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Kosongkan Data</span>
+              </button>
+            )}
+
+            <button
+              onClick={downloadSampleExcelTemplate}
+              className="text-xs px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-2 shadow-lg transition cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Unduh Template 13 Kolom</span>
+            </button>
+          </div>
         </div>
       </div>
 

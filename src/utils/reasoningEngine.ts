@@ -145,6 +145,34 @@ export function generateSystemInsights(
   totalParticipants: number,
   totalGraduates: number
 ) {
+  if (totalParticipants === 0) {
+    return {
+      summaryBanner: 'Belum ada data pendaftar pelatihan yang diunggah. Silakan unggah berkas Excel (.xlsx / .csv) pelatihan Anda pada menu Unggah Data, atau klik tombol "Muat Data Sampel Benchmark" untuk melihat analisis lengkap.',
+      keyPoints: [
+        {
+          badge: 'Status Sistem',
+          text: 'Menunggu berkas data pelatihan peserta pertama diunggah.',
+          type: 'info' as const
+        },
+        {
+          badge: 'Integrasi IMDI',
+          text: 'Master referensi IMDI untuk 38 Kab/Kota Jawa Timur dan 10 Kab/Kota NTB telah siap dikorelasikan.',
+          type: 'info' as const
+        },
+        {
+          badge: 'Kepatuhan UU PDP',
+          text: 'Fitur filter mandiri akan otomatis membuang kolom Nama & NIK saat file diunggah.',
+          type: 'success' as const
+        },
+        {
+          badge: 'Standar 13 Kolom',
+          text: 'Mendukung multi-file Excel/CSV dengan pencocokan semantik kolom otomatis.',
+          type: 'warning' as const
+        }
+      ]
+    };
+  }
+
   const regionList = Object.values(regions);
   const avgPassRate = totalParticipants > 0 ? ((totalGraduates / totalParticipants) * 100).toFixed(1) : '0';
 

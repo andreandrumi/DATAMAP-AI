@@ -44,30 +44,32 @@ import {
   Activity
 } from 'lucide-react';
 
+const EMPTY_AUDIT_REPORT: ReconciliationReport = {
+  totalFiles: 0,
+  totalRowsReceived: 0,
+  totalRowsValid: 0,
+  totalDuplicatesExcluded: 0,
+  totalAnomaliesFixed: 0,
+  totalPIIRedacted: 0,
+  reconciliationRate: 100,
+  columnMappingSummary: STANDARD_COLUMNS.map(c => ({
+    columnName: c.name,
+    detectedHeader: '-',
+    status: c.excludedForPrivacy ? 'excluded_pdp' : 'optional_missing',
+    matchConfidence: 0
+  })),
+  findings: []
+};
+
 export default function App() {
   // Navigation active tab
   const [activeTab, setActiveTab] = useState<'kpi' | 'jatim' | 'ntb' | 'audit' | 'upload'>('kpi');
 
-  // Master Participants State
-  const [participants, setParticipants] = useState<ParticipantRecord[]>(INITIAL_BENCHMARK_PARTICIPANTS);
+  // Master Participants State - starts empty (tanpa data) until uploaded or benchmark loaded
+  const [participants, setParticipants] = useState<ParticipantRecord[]>([]);
 
-  // Reconciliation & Audit Report State
-  const [auditReport, setAuditReport] = useState<ReconciliationReport>({
-    totalFiles: 4,
-    totalRowsReceived: INITIAL_BENCHMARK_PARTICIPANTS.length + 48,
-    totalRowsValid: INITIAL_BENCHMARK_PARTICIPANTS.length,
-    totalDuplicatesExcluded: 48,
-    totalAnomaliesFixed: 64,
-    totalPIIRedacted: INITIAL_BENCHMARK_PARTICIPANTS.length + 48,
-    reconciliationRate: 100,
-    columnMappingSummary: STANDARD_COLUMNS.map(c => ({
-      columnName: c.name,
-      detectedHeader: c.synonyms[0],
-      status: c.excludedForPrivacy ? 'excluded_pdp' : 'mapped',
-      matchConfidence: 0.98
-    })),
-    findings: INITIAL_AUDIT_FINDINGS
-  });
+  // Reconciliation & Audit Report State - starts empty
+  const [auditReport, setAuditReport] = useState<ReconciliationReport>(EMPTY_AUDIT_REPORT);
 
   // Selected City on Map / Table
   const [selectedCity, setSelectedCity] = useState<string | null>('Kota Surabaya');
@@ -117,12 +119,18 @@ export default function App() {
       totalDuplicatesExcluded: prev.totalDuplicatesExcluded + duplicatesRemoved,
       totalAnomaliesFixed: prev.totalAnomaliesFixed + anomaliesFixed,
       totalPIIRedacted: prev.totalPIIRedacted + piiRedacted,
+      columnMappingSummary: STANDARD_COLUMNS.map(c => ({
+        columnName: c.name,
+        detectedHeader: c.synonyms[0],
+        status: c.excludedForPrivacy ? 'excluded_pdp' : 'mapped',
+        matchConfidence: 0.98
+      })),
       findings: [...findings, ...prev.findings]
     }));
   };
 
-  // Reset to Benchmark Data
-  const handleResetToBenchmark = () => {
+  // Load Benchmark Demo Data (1,850 participants in Jatim & NTB)
+  const handleLoadBenchmark = () => {
     setParticipants(INITIAL_BENCHMARK_PARTICIPANTS);
     setAuditReport({
       totalFiles: 4,
@@ -140,6 +148,22 @@ export default function App() {
       })),
       findings: INITIAL_AUDIT_FINDINGS
     });
+    setSelectedCity('Kota Surabaya');
+    setFilter({
+      province: 'All',
+      city: 'All',
+      academy: 'All',
+      theme: 'All',
+      status: 'All',
+      year: 'All',
+      searchQuery: ''
+    });
+  };
+
+  // Clear All Data back to zero (Empty State)
+  const handleClearAllData = () => {
+    setParticipants([]);
+    setAuditReport(EMPTY_AUDIT_REPORT);
     setSelectedCity('Kota Surabaya');
     setFilter({
       province: 'All',
@@ -242,9 +266,37 @@ export default function App() {
 
           {/* Quick Actions Header */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {participants.length === 0 ? (
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>Dashboard Kosong</span>
+              </span>
+            ) : (
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>{participants.length.toLocaleString()} Peserta Aktif</span>
+              </span>
+            )}
+
+            {participants.length === 0 && (
+              <button
+                onClick={handleLoadBenchmark}
+                className="text-xs px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition shadow cursor-pointer"
+                title="Muat 1.850 data benchmark Jatim & NTB untuk pengujian instan"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden md:inline">Muat Demo Data</span>
+              </button>
+            )}
+
             <button
               onClick={() => setIsExportModalOpen(true)}
-              className="text-xs px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition shadow"
+              disabled={participants.length === 0}
+              className={`text-xs px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition shadow ${
+                participants.length === 0 
+                  ? 'bg-slate-900 border-slate-800 text-slate-500 cursor-not-allowed'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 cursor-pointer'
+              }`}
               title="Ekspor laporan eksekutif atau unduh agregat Excel"
             >
               <FileDown className="w-3.5 h-3.5 text-blue-400" />
@@ -253,7 +305,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('upload')}
-              className="text-xs px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/30 transition"
+              className="text-xs px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/30 transition cursor-pointer"
             >
               <Upload className="w-3.5 h-3.5" />
               <span>Unggah Data</span>
@@ -345,6 +397,7 @@ export default function App() {
             regionMetrics={regionMetrics}
             onSelectCity={setSelectedCity}
             onNavigateToTab={setActiveTab}
+            onLoadBenchmark={handleLoadBenchmark}
           />
         )}
 
@@ -372,7 +425,7 @@ export default function App() {
         {activeTab === 'audit' && (
           <DataAuditTab
             auditReport={auditReport}
-            onResetToBenchmark={handleResetToBenchmark}
+            onResetToBenchmark={handleLoadBenchmark}
           />
         )}
 
@@ -381,6 +434,9 @@ export default function App() {
           <UploadManagementTab
             onIngestFiles={handleIngestFiles}
             onNavigateToTab={setActiveTab}
+            onLoadBenchmark={handleLoadBenchmark}
+            onClearData={handleClearAllData}
+            currentTotalParticipants={participants.length}
           />
         )}
       </main>
