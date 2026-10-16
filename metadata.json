@@ -1,0 +1,6 @@
+{
+  "name": "MRKI Monitoring & Reporting System",
+  "description": "Sistem monitoring, audit data mandiri, dan dashboard analitik sebaran peserta pelatihan Jawa Timur & NTB dengan integrasi IMDI serta penalaran rekomendasi berbasis AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
